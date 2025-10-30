@@ -1,0 +1,40 @@
+# Node
+node_modules/
+dist/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Environment files (may contain secrets)
+.env
+.env.*
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+
+# Editor directories and files
+.vscode/
+.idea/
+
+# Coverage and test output
+coverage/
+.nyc_output/
+
+# Database files
+*.sqlite
+*.sqlite3
+
+# Build / cache
+.cache/
+.parcel-cache/
+.turbo/
+.vite/
+
+# Docker
+# Add any generated Docker files you don't want in git
