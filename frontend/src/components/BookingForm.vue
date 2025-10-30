@@ -1,6 +1,19 @@
 <template>
     <div class="booking">
-        <h2>Maak een reservering</h2>
+        <div class="panel-header">
+            <div class="panel-title">Kies diensten</div>
+        </div>
+
+        <!-- optional category pills (scrollable) -->
+        <div class="panel-cats" aria-hidden>
+            <div class="cat">Gelaatsverzorging</div>
+            <div class="cat">Manicure</div>
+            <div class="cat">Voetverzorging</div>
+            <div class="cat">Wimpers</div>
+            <div class="cat">Wenkbrauwen</div>
+        </div>
+
+
 
         <label>
             Kies datum
@@ -25,16 +38,7 @@
 
             <p v-if="selectedServices.length === 0" class="muted">Kies ten minste één behandeling.</p>
 
-            <div class="selection-footer">
-                <div class="total">
-                    <div>Totaal:</div>
-                    <div class="total-amount">€ {{ total }}</div>
-                </div>
-                <div>
-                    <button class="btn-primary" :disabled="selectedServices.length === 0" @click="chooseTime">Kies een
-                        tijd</button>
-                </div>
-            </div>
+            <!-- selection-footer removed to avoid duplicate total; sticky footer at bottom shows total and CTA -->
 
             <div v-if="showTimes && !loading && slots.length && selectedServices.length">
                 <h3>Beschikbare tijden voor {{ date }} <small
@@ -49,33 +53,40 @@
                     </li>
                 </ul>
             </div>
-        </div>
 
+            <div v-if="selected">
+                <h3>Geselecteerd: {{ selected }} <small
+                        style="font-weight:400; font-size:0.9rem; color:var(--muted);">(1 uur)</small></h3>
+                <form class="form" @submit.prevent="submitBooking">
+                    <label>
+                        Naam
+                        <input v-model="form.name" required type="text" />
+                    </label>
+                    <label>
+                        E-mail
+                        <input v-model="form.email" type="email" required />
+                    </label>
+                    <label>
+                        Telefoon (optioneel)
+                        <input v-model="form.phone" type="tel" />
+                    </label>
+                    <div class="actions">
+                        <button class="btn-primary" type="submit" :disabled="submitting">Bevestig reservering</button>
+                    </div>
+                </form>
+            </div>
 
-        <div v-if="selected">
-            <h3>Geselecteerd: {{ selected }} <small style="font-weight:400; font-size:0.9rem; color:var(--muted);">(1
-                    uur)</small></h3>
-            <form class="form" @submit.prevent="submitBooking">
-                <label>
-                    Naam
-                    <input v-model="form.name" required type="text" />
-                </label>
-                <label>
-                    E-mail
-                    <input v-model="form.email" type="email" required />
-                </label>
-                <label>
-                    Telefoon (optioneel)
-                    <input v-model="form.phone" type="tel" />
-                </label>
-                <div class="actions">
-                    <button class="btn-primary" type="submit" :disabled="submitting">Bevestig reservering</button>
+            <div v-if="message" class="message">{{ message }}</div>
+
+            <!-- sticky footer with total and CTA -->
+            <div class="booking-footer">
+                <div class="total">Totaal: € {{ total }}</div>
+                <div class="cta">
+                    <button class="btn-primary" :disabled="selectedServices.length === 0" @click="chooseTime">Kies een
+                        tijd</button>
                 </div>
-            </form>
+            </div>
         </div>
-
-        <div v-if="message" class="message">{{ message }}</div>
-    </div>
 </template>
 
 <script setup lang="ts">

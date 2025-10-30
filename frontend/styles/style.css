@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&display=swap');
+
 :root {
     /* Brand palette derived from logo: pink brush, beige background, dark text */
     --bg: #fbf7f5;
@@ -37,6 +40,8 @@ a:hover {
 
 /* Import brand font */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+/* Elegant heading font for titles */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&display=swap');
 
 * {
     box-sizing: border-box
@@ -92,8 +97,8 @@ button:focus-visible {
 
 .layout {
     display: grid;
-    /* main content + sidebar — keep sidebar a fixed comfortable width but allow it to shrink on small screens */
-    grid-template-columns: 1fr min(420px, 38%);
+    /* Desktop: main content + fixed-width sidebar */
+    grid-template-columns: 1fr 420px;
     gap: 2rem;
     align-items: start;
 }
@@ -126,6 +131,7 @@ button:focus-visible {
     color: var(--muted)
 }
 
+/* Ensure headings always use the readable brand text color (fixes invisible/miscolored titles) */
 /* Ensure headings always use the readable brand text color (fixes invisible/miscolored titles) */
 h1,
 h2,
@@ -176,10 +182,16 @@ textarea:focus {
     border-radius: 8px
 }
 
-@media (max-width: 920px) {
+/* Stack layout on narrower screens (phones/tablets) */
+@media (max-width: 768px) {
     .layout {
         grid-template-columns: 1fr;
         gap: 1rem;
+    }
+
+    /* make aside take full width when stacked */
+    aside {
+        width: 100%;
     }
 }
 
@@ -241,4 +253,58 @@ aside .booking {
     .slots {
         grid-template-columns: 1fr
     }
+
+    /* Further reduce hero content and spacing on small phones to reduce initial scroll */
+    @media (max-width: 420px) {
+        .hero .card {
+            padding: 0.75rem
+        }
+
+        .hero p,
+        .hero ul {
+            font-size: 0.95rem;
+            margin-top: 0.5rem
+        }
+
+        .hero h2 {
+            font-size: 1.15rem
+        }
+
+        /* make header compact */
+        .brand img {
+            height: 40px;
+            width: 40px
+        }
+
+        header {
+            padding: 0.5rem 0
+        }
+    }
+}
+
+/* Decorative boxed headings used for page sections */
+h1.page-title,
+h2.page-title,
+h2.section-title,
+h3.section-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    display: inline-block;
+    background: #fff;
+    padding: 0.35rem 0.9rem;
+    box-shadow: 0 6px 18px rgba(36, 27, 24, 0.06);
+    border-radius: 4px;
+    margin: 0.6rem 0;
+    line-height: 1;
+}
+
+/* Small subtitle label under titles */
+.title-sub {
+    display: block;
+    background: #fff;
+    padding: 0.25rem 0.6rem;
+    margin-top: 0.4rem;
+    font-size: 0.95rem;
+    font-style: normal
 }

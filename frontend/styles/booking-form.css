@@ -7,9 +7,124 @@
     box-shadow: var(--card-shadow);
 }
 
+/* compact intro block that sits above the first input in the booking panel */
+.booking .intro {
+    background: linear-gradient(180deg, rgba(243, 230, 225, 0.9), rgba(255, 255, 255, 0.6));
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    margin: 0 0 0.8rem 0;
+}
+
+.booking .intro h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.booking .intro p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--muted);
+}
+
+/* Header area to resemble the design: centered title and compact category pills */
+.booking .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding-bottom: 0.5rem;
+}
+
+.booking .panel-title {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 1.05rem;
+}
+
+.booking .panel-cats {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    overflow-x: auto;
+}
+
+.booking .panel-cats .cat {
+    padding: 0.45rem 0.95rem;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(36, 27, 24, 0.04);
+    white-space: nowrap;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* make service list items show price aligned right like screenshot */
+.service-list {
+    list-style: none;
+    padding: 0;
+    margin: 0
+}
+
+.service-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid rgba(16, 42, 67, 0.04)
+}
+
+.service-item .desc {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-top: 0.35rem
+}
+
+.service-item .price {
+    background: #fff;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(36, 27, 24, 0.04);
+    font-weight: 700
+}
+
+/* sticky footer */
+.booking .booking-footer {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    padding-top: 0.8rem;
+    margin-top: 0.8rem;
+    background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.6));
+}
+
+.booking .booking-footer .total {
+    font-weight: 700;
+    font-size: 1.1rem
+}
+
+.booking .booking-footer .cta {
+    margin-left: auto
+}
+
 h2 {
     margin: 0 0 0.75rem 0;
     color: var(--text)
+}
+
+/* Keep booking form headings simple (override boxed page-title style) */
+.booking h2,
+.booking h3 {
+    font-family: inherit;
+    font-style: normal;
+    background: none;
+    padding: 0;
+    box-shadow: none;
+    display: block;
 }
 
 h3 {
@@ -171,5 +286,84 @@ h3 {
 @media (max-width: 520px) {
     .slots {
         grid-template-columns: 1fr
+    }
+}
+
+/* When stacked on narrow screens (<=768px), ensure booking card uses full width */
+@media (max-width: 768px) {
+    .booking {
+        max-width: 100%;
+        margin: 0;
+        padding: 1rem;
+    }
+}
+
+/* Compact mobile layout to reduce vertical length and make actions easier to tap */
+@media (max-width: 420px) {
+    .booking {
+        padding: 0.75rem;
+        border-radius: 10px;
+        font-size: 0.95rem;
+    }
+
+    /* services: hide long descriptions and make chips more compact */
+    .service-desc {
+        display: none
+    }
+
+    .service-chip {
+        padding: 0.45rem 0.5rem;
+        border-radius: 8px
+    }
+
+    .service-price {
+        font-size: 0.9rem
+    }
+
+    /* reduce spacing and make total/actions stack */
+    .selection-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem
+    }
+
+    .selection-footer .total {
+        align-items: flex-start
+    }
+
+    /* slots: make horizontally scrollable small pill buttons to save vertical space */
+    .slots {
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        padding-bottom: 0.25rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .slots li {
+        min-width: 110px;
+        flex: 0 0 auto
+    }
+
+    .slot-btn {
+        padding: 0.5rem;
+        font-size: 0.95rem
+    }
+
+    /* form inputs smaller and buttons full width */
+    .form input[type="text"],
+    .form input[type="email"],
+    .form input[type="tel"],
+    .form input[type="date"] {
+        padding: 0.5rem;
+    }
+
+    .actions .btn-primary {
+        width: 100%;
+        padding: 0.6rem
+    }
+
+    .message {
+        font-size: 0.9rem
     }
 }
