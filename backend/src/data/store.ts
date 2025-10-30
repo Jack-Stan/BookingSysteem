@@ -5,6 +5,7 @@ export type Booking = {
     name: string
     email: string
     phone?: string
+    services?: string[]
 }
 
 // in-memory store: map date -> bookings

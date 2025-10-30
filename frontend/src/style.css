@@ -1,14 +1,26 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Brand palette derived from logo: pink brush, beige background, dark text */
+  --bg: #fbf7f5;
+  /* very light beige */
+  --surface: #fffdfa;
+  /* card surface */
+  --muted: #8f7661;
+  /* soft brown/neutral */
+  --text: #241b18;
+  /* charcoal/dark for text */
+  --primary: #d84b8a;
+  /* logo pink */
+  --primary-600: #c43f74;
+  --brand-beige: #f3e6e1;
+  /* warm beige */
+  --card-shadow: 0 10px 30px rgba(36, 27, 24, 0.06);
+  --font: 'Poppins', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: var(--font);
   line-height: 1.5;
   font-weight: 400;
-
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+  color: var(--text);
+  background-color: var(--bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -18,16 +30,25 @@ a {
   color: #646cff;
   text-decoration: inherit;
 }
+
 a:hover {
   color: #535bf2;
 }
 
+/* Import brand font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+* {
+  box-sizing: border-box
+}
+
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background: linear-gradient(180deg, var(--bg) 0%, #ffffff 60%);
+  -webkit-font-smoothing: antialiased;
+  font-family: var(--font);
 }
 
 h1 {
@@ -46,23 +67,165 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
 .card {
-  padding: 2em;
+  padding: 1.25rem;
+  background: var(--surface);
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
 }
 
 #app {
-  max-width: 1280px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.layout {
+  display: grid;
+  /* main content + sidebar — keep sidebar a fixed comfortable width but allow it to shrink on small screens */
+  grid-template-columns: 1fr min(420px, 38%);
+  gap: 2rem;
+  align-items: start;
+}
+
+.hero {
+  text-align: left;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: .75rem
+}
+
+.brand img {
+  height: 56px;
+  width: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 6px 20px rgba(36, 27, 24, 0.06)
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--text)
+}
+
+/* Ensure headings always use the readable brand text color (fixes invisible/miscolored titles) */
+h1,
+h2,
+h3 {
+  color: var(--text);
+}
+
+.brand small {
+  color: var(--muted)
+}
+
+header {
+  background: transparent;
+  padding: 1rem 0
+}
+
+header .brand {
+  padding: 0.25rem 0
+}
+
+.hero h2 {
+  font-size: 1.6rem;
+  color: var(--text);
+  margin-bottom: 0.5rem
+}
+
+.card {
+  background: linear-gradient(180deg, var(--surface), var(--brand-beige));
+}
+
+/* Make booking card in the sidebar use available width (so it doesn't overflow or stay narrow on small screens) */
+aside .booking {
+  max-width: 100%;
+  margin: 0;
+}
+
+/* Inputs focus */
+input:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 6px 18px rgba(212, 75, 138, 0.08);
+  border-color: rgba(212, 75, 138, 0.3);
+}
+
+/* Primary button hover */
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(212, 75, 138, 0.12)
+}
+
+/* Success toast */
+.toast-success {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #eafaf1;
+  border: 1px solid #cdedd6;
+  color: #065a2a;
+  border-radius: 8px
+}
+
+@media (max-width: 920px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Tighter mobile adjustments */
+@media (max-width: 720px) {
+  :root {
+    --card-shadow: 0 6px 18px rgba(36, 27, 24, 0.04);
+  }
+
+  h1 {
+    font-size: 2rem
+  }
+
+  .brand img {
+    height: 44px;
+    width: 44px
+  }
+
+  .brand {
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  /* Make hero card and booking card use edge-to-edge spacing on very small screens */
+  #app {
+    padding: 1rem
+  }
+
+  .card {
+    padding: 1rem
+  }
+
+  /* service/grid adjustments on narrow screens */
+  .services {
+    grid-template-columns: 1fr
+  }
+
+  .slots {
+    grid-template-columns: 1fr
+  }
 }
 
 @media (prefers-color-scheme: light) {
@@ -70,9 +233,11 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
+
   a:hover {
     color: #747bff;
   }
+
   button {
     background-color: #f9f9f9;
   }

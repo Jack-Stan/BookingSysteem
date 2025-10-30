@@ -1,6 +1,11 @@
 import nodemailer from 'nodemailer'
 import type { Booking } from '../data/store'
 
+function prettyServices(s?: string[]) {
+    if (!s || s.length === 0) return '-'
+    return s.join(', ')
+}
+
 const SMTP_HOST = process.env.SMTP_HOST
 const SMTP_PORT = Number(process.env.SMTP_PORT || '587')
 const SMTP_USER = process.env.SMTP_USER
@@ -19,7 +24,7 @@ if (SMTP_HOST && SMTP_USER) {
 
 async function sendBookingConfirmation(b: Booking) {
     const subject = `Bevestiging reservering ${b.date} ${b.time}`
-    const text = `Beste ${b.name},\n\nJe reservering op ${b.date} om ${b.time} is bevestigd.\n\nGroeten,\nSilke Beauty`
+    const text = `Beste ${b.name},\n\nJe reservering op ${b.date} om ${b.time} is bevestigd.\n\nGeselecteerde behandelingen: ${prettyServices(b.services)}\n\nGroeten,\nSilke Beauty`
     if (!transporter) {
         console.log('Email not configured; would send:', { to: b.email, subject, text })
         return

@@ -29,12 +29,12 @@ async function createEvent(b: Booking) {
     }
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
     const start = `${b.date}T${b.time}:00`
-    // naive 30-min event
+    // default: 1 hour event (60 minutes)
     const [hh, mm] = b.time.split(':').map(Number)
-    const endDate = new Date(Date.UTC(Number(b.date.split('-')[0]), Number(b.date.split('-')[1]) - 1, Number(b.date.split('-')[2]), hh, mm + 30))
+    const endDate = new Date(Date.UTC(Number(b.date.split('-')[0]), Number(b.date.split('-')[1]) - 1, Number(b.date.split('-')[2]), hh, mm + 60))
     const event = {
         summary: `Reservering - ${b.name}`,
-        description: `Naam: ${b.name}\nTel: ${b.phone || '-'}\nE-mail: ${b.email}`,
+        description: `Naam: ${b.name}\nTel: ${b.phone || '-'}\nE-mail: ${b.email}\nBehandelingen: ${b.services && b.services.length ? b.services.join(', ') : '-'}`,
         start: { dateTime: start },
         end: { dateTime: endDate.toISOString() }
     }

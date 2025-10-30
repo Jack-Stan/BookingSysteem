@@ -3,14 +3,13 @@ import { getBookingsForDate, countBookingsForSlot } from '../data/store'
 
 const router = Router()
 
-// generate slots for a date (09:00 - 17:00 every 30m)
+// generate hourly slots for a date (09:00 - 16:00 start times for 1-hour appointments)
 function generateSlots() {
     const slots: string[] = []
-    for (let h = 9; h < 17; h++) {
+    // appointments are 1 hour; last start is 16:00 for a 17:00 end
+    for (let h = 9; h <= 16; h++) {
         slots.push(`${String(h).padStart(2, '0')}:00`)
-        slots.push(`${String(h).padStart(2, '0')}:30`)
     }
-    slots.push('17:00')
     return slots
 }
 

@@ -1,0 +1,19 @@
+# Netlify configuration to build & publish the frontend (Vite + Vue)
+[build]
+  # run commands from the frontend folder
+  base = "frontend"
+  # build command (Netlify will run this in the `base` folder)
+  command = "npm run build"
+  # publish directory (relative to base)
+  publish = "dist"
+
+[dev]
+  # serve from frontend during Netlify Dev
+  framework = "vite"
+
+[[redirects]]
+  # SPA fallback so client-side routes work
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = true
