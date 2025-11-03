@@ -16,4 +16,8 @@
   from = "/*"
   to = "/index.html"
   status = 200
-  force = true
+  # Do NOT force this redirect for every request; forcing causes asset
+  # requests (like /assets/*.js) to be rewritten to index.html, which
+  # makes the browser receive HTML where it expects JS and results in a
+  # white screen / MIME type errors. By leaving out `force` Netlify will
+  # serve existing files (assets) and only fallback for missing paths.

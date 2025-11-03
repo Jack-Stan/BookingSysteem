@@ -19,5 +19,15 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue"
-  ]
+  ],
+  "vueCompilerOptions": {
+    "globalTypesPath": "./src/vue-global.d.ts"
+  }
 }
+/*
+  Volar / Vue language server may attempt to write a generated global types file.
+  Some environments (containers, restricted FS, or misconfigured projects) can
+  prevent that. To avoid the "Failed to write the global types file" error,
+  we explicitly set a writable path inside the repo and provide a manual file
+  at `src/vue-global.d.ts`.
+*/

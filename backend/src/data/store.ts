@@ -1,5 +1,4 @@
 import { v4 as uuid } from 'uuid'
-import type { Firestore } from 'firebase-admin/firestore'
 
 export type Booking = {
     id: string
@@ -13,7 +12,8 @@ export type Booking = {
 
 // We'll attempt to initialize Firestore via firebase-admin. If configuration
 // is missing, we gracefully fall back to an in-memory store to keep local dev easy.
-let db: Firestore | null = null
+// keep db untyped to avoid depending on firebase-admin types at compile time
+let db: any = null
 let useInMemory = true
 const bookingsByDate = new Map<string, Booking[]>()
 
@@ -42,7 +42,8 @@ function tryInitFirestore() {
         // keep using in-memory store
         useInMemory = true
         db = null
-        console.warn('Firestore not configured or failed to initialize; using in-memory store', e?.message || e)
+        // 'e' can be unknown; coerce to any when accessing message to satisfy TS
+        console.warn('Firestore not configured or failed to initialize; using in-memory store', (e as any)?.message || e)
     }
 }
 
@@ -50,7 +51,7 @@ export async function getBookingsForDate(date: string): Promise<Booking[]> {
     tryInitFirestore()
     if (useInMemory) return bookingsByDate.get(date) || []
     const snap = await db!.collection('bookings').where('date', '==', date).get()
-    return snap.docs.map(d => d.data() as Booking)
+    return snap.docs.map((d: any) => d.data() as Booking)
 }
 
 export async function addBooking(b: Booking): Promise<void> {
