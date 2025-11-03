@@ -1,48 +1,41 @@
 <template>
     <div class="booking">
-        <div class="panel-header">
+        <div v-if="view === 'services'" class="panel-header">
             <div class="panel-title">Kies diensten</div>
+            <div class="panel-cats" aria-hidden="false">
+                <button type="button" class="cat" :class="{ active: !selectedCategory }"
+                    @click="selectCategory(null)">Alles</button>
+                <button v-for="cat in categories" :key="cat" type="button" class="cat"
+                    :class="{ active: selectedCategory === cat }" @click="selectCategory(cat)">{{ cat }}</button>
+            </div>
         </div>
-
-        <!-- optional category pills (scrollable) -->
-        <div class="panel-cats" aria-hidden>
-            <div class="cat">Gelaatsverzorging</div>
-            <div class="cat">Manicure</div>
-            <div class="cat">Voetverzorging</div>
-            <div class="cat">Wimpers</div>
-            <div class="cat">Wenkbrauwen</div>
-        </div>
-
-
-
-        <label>
-            Kies datum
-            <input type="date" v-model="date" @change="loadSlots" />
-        </label>
-
-        <div v-if="loading">Laden...</div>
-
         <div>
-            <h3>Kies behandelingen</h3>
-            <div class="services">
-                <button v-for="s in servicesOptions" :key="s.name"
-                    :class="['service-chip', { 'service-selected': selectedServices.includes(s.name) }]"
-                    @click.prevent="toggleService(s.name)">
-                    <div class="service-top">
-                        <span class="service-name">{{ s.name }}</span>
-                        <span class="service-price">€{{ s.price }}</span>
-                    </div>
-                    <div class="service-desc">{{ s.desc }}</div>
-                </button>
+            <!-- Services window -->
+            <div v-if="view === 'services'">
+                <h3>Kies behandelingen</h3>
+                <div class="services">
+                    <button v-for="s in filteredServices" :key="s.name" type="button"
+                        :class="['service-chip', { 'service-selected': selectedServices.includes(s.name) }]"
+                        @click="toggleService(s.name)" :aria-pressed="selectedServices.includes(s.name)">
+                        <div class="service-top">
+                            <span class="service-name">{{ s.name }}</span>
+                            <div style="display:flex; align-items:center; gap:0.5rem">
+                                <span class="service-price">€{{ s.price }}</span>
+                            </div>
+                        </div>
+                        <div class="service-desc">{{ s.desc }}</div>
+                    </button>
+                </div>
             </div>
 
-            <p v-if="selectedServices.length === 0" class="muted">Kies ten minste één behandeling.</p>
-
-            <!-- selection-footer removed to avoid duplicate total; sticky footer at bottom shows total and CTA -->
-
-            <div v-if="showTimes && !loading && slots.length && selectedServices.length">
-                <h3>Beschikbare tijden voor {{ date }} <small
-                        style="font-weight:400; font-size:0.9rem; color:var(--muted);">(duur: 1 uur)</small></h3>
+            <!-- Times window -->
+            <div v-if="view === 'times'">
+                <div
+                    style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:0.5rem">
+                    <button type="button" class="btn-secondary" @click="goBackToServices">← Terug</button>
+                    <div style="font-weight:700">Beschikbare tijden voor {{ date }}</div>
+                    <div style="width:56px"></div>
+                </div>
                 <ul class="slots">
                     <li v-for="s in slots" :key="s.time">
                         <button :class="['slot-btn', { 'slot-selected': selected === s.time }]"
@@ -52,41 +45,75 @@
                         </button>
                     </li>
                 </ul>
+
+                <div class="selection-footer">
+                    <div class="total">Geselecteerd: <strong>{{ selected || '-' }}</strong></div>
+                    <div class="cta">
+                        <button class="btn-primary" type="button" :disabled="!selected"
+                            @click="finalizeSelection">Finaliseer reservering</button>
+                    </div>
+                </div>
             </div>
 
-            <div v-if="selected">
-                <h3>Geselecteerd: {{ selected }} <small
-                        style="font-weight:400; font-size:0.9rem; color:var(--muted);">(1 uur)</small></h3>
-                <form class="form" @submit.prevent="submitBooking">
-                    <label>
-                        Naam
-                        <input v-model="form.name" required type="text" />
-                    </label>
-                    <label>
-                        E-mail
-                        <input v-model="form.email" type="email" required />
-                    </label>
-                    <label>
-                        Telefoon (optioneel)
-                        <input v-model="form.phone" type="tel" />
-                    </label>
-                    <div class="actions">
-                        <button class="btn-primary" type="submit" :disabled="submitting">Bevestig reservering</button>
-                    </div>
-                </form>
+            <!-- Credentials window -->
+            <div v-if="view === 'credentials'">
+                <div
+                    style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:0.5rem">
+                    <button type="button" class="btn-secondary" @click="goBackToTimes">← Terug</button>
+                    <div style="font-weight:700">Vul je gegevens in</div>
+                    <div style="width:56px"></div>
+                </div>
+                <div>
+                    <h3>Geselecteerd: {{ selected }} <small
+                            style="font-weight:400; font-size:0.9rem; color:var(--muted);">(1 uur)</small></h3>
+                    <form class="form" @submit.prevent="submitBooking">
+                        <label>
+                            Naam
+                            <input v-model="form.name" required type="text" />
+                        </label>
+                        <label>
+                            E-mail
+                            <input v-model="form.email" type="email" required />
+                        </label>
+                        <label>
+                            Telefoon (optioneel)
+                            <input v-model="form.phone" type="tel" />
+                        </label>
+                        <div class="actions">
+                            <button class="btn-primary" type="submit" :disabled="submitting">Finish &amp;
+                                Bevestig</button>
+                        </div>
+                    </form>
+                </div>
             </div>
+            <p v-if="selectedServices.length === 0" class="muted">Kies ten minste één behandeling.</p>
 
             <div v-if="message" class="message">{{ message }}</div>
 
-            <!-- sticky footer with total and CTA -->
-            <div class="booking-footer">
+            <!-- sticky footer with total and CTA (only on services view) -->
+            <div v-if="view === 'services'" class="booking-footer">
                 <div class="total">Totaal: € {{ total }}</div>
                 <div class="cta">
                     <button class="btn-primary" :disabled="selectedServices.length === 0" @click="chooseTime">Kies een
                         tijd</button>
                 </div>
             </div>
+
+            <!-- Confirmation window (after successful booking) -->
+            <div v-if="view === 'confirmation'" class="confirmation"
+                style="margin-top:1rem; padding:1rem; border-radius:8px; background:linear-gradient(180deg, #fff, #fffdfa); box-shadow:var(--card-shadow);">
+                <h3>Reservering geplaatst</h3>
+                <p>{{ message }}</p>
+                <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
+                    <a class="btn-primary" href="https://instagram.com/" target="_blank" rel="noopener">Bekijk
+                        Instagram</a>
+                    <a class="btn-primary" href="https://facebook.com/" target="_blank" rel="noopener">Bekijk
+                        Facebook</a>
+                    <button type="button" class="btn-secondary" @click="resetToServices">Nieuwe reservering</button>
+                </div>
+            </div>
         </div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -101,26 +128,77 @@ const submitting = ref(false)
 const message = ref('')
 
 // available services (taken from provided price screenshots)
-const servicesOptions = ref<Array<{ name: string, price: number, desc?: string }>>([
-    { name: 'Luxe spa pedicure', price: 25, desc: 'Warm voetbad, scrubs, vijlen en voetmassage.' },
-    { name: 'Luxe spa pedicure met gellak', price: 35, desc: 'Inclusief pedicure + gellak op teennagels.' },
-    { name: 'Manicure', price: 15, desc: 'Handverzorging: vijlen, nagelriemen en lakken.' },
-    { name: 'Gellack', price: 25, desc: 'Duurzame lak met glans en extra stevigheid.' },
-    { name: 'Biab/NNT', price: 30, desc: 'Bouwende gel voor extra stevigheid en vorm.' },
-    { name: 'Gel eigen lengte', price: 30, desc: 'Gel aanbrengen op je natuurlijke lengte.' },
-    { name: 'Gel met verlenging', price: 45, desc: 'Gel verlenging voor langere nagels en vorm.' },
-    { name: 'Gel bijwerking', price: 35, desc: 'Opvullen en onderhoud van bestaande gel.' },
-    { name: 'Wimpers liften', price: 45, desc: 'Lifting voor een mooie natuurlijke wimperkrul.' },
-    { name: 'Wenkbrauw lamination', price: 45, desc: 'Lift en fixeer de wenkbrauwwollen voor shape.' },
-    { name: 'Kleur behandeling - Wenkbrauwen', price: 15, desc: 'Verven van de wenkbrauwen voor vollere look.' },
-    { name: 'Kleur behandeling - Wimpers', price: 15, desc: 'Verven van wimpers voor meer definitie.' },
-    { name: 'Wenkbrauwen wax', price: 10, desc: 'Wenkbrauw epilatie voor nette vormen.' },
-    { name: 'Bovenlip wax', price: 5, desc: 'Verwijderen van haartjes boven de bovenlip.' }
+const servicesOptions = ref<Array<{ name: string, price: number, desc?: string, category?: string }>>([
+    { name: 'Luxe spa pedicure', price: 25, desc: 'Warm voetbad, scrubs, vijlen en voetmassage.', category: 'Voetverzorging' },
+    { name: 'Luxe spa pedicure met gellak', price: 35, desc: 'Inclusief pedicure + gellak op teennagels.', category: 'Voetverzorging' },
+    { name: 'Manicure', price: 15, desc: 'Handverzorging: vijlen, nagelriemen en lakken.', category: 'Manicure' },
+    { name: 'Gellack', price: 25, desc: 'Duurzame lak met glans en extra stevigheid.', category: 'Manicure' },
+    { name: 'Biab/NNT', price: 30, desc: 'Bouwende gel voor extra stevigheid en vorm.', category: 'Manicure' },
+    { name: 'Gel eigen lengte', price: 30, desc: 'Gel aanbrengen op je natuurlijke lengte.', category: 'Manicure' },
+    { name: 'Gel met verlenging', price: 45, desc: 'Gel verlenging voor langere nagels en vorm.', category: 'Manicure' },
+    { name: 'Gel bijwerking', price: 35, desc: 'Opvullen en onderhoud van bestaande gel.', category: 'Manicure' },
+    { name: 'Wimpers liften', price: 45, desc: 'Lifting voor een mooie natuurlijke wimperkrul.', category: 'Wimpers' },
+    { name: 'Wenkbrauw lamination', price: 45, desc: 'Lift en fixeer de wenkbrauwwollen voor shape.', category: 'Wenkbrauwen' },
+    { name: 'Kleur behandeling - Wenkbrauwen', price: 15, desc: 'Verven van de wenkbrauwen voor vollere look.', category: 'Wenkbrauwen' },
+    { name: 'Kleur behandeling - Wimpers', price: 15, desc: 'Verven van wimpers voor meer definitie.', category: 'Wimpers' },
+    { name: 'Wenkbrauwen wax', price: 10, desc: 'Wenkbrauw epilatie voor nette vormen.', category: 'Wenkbrauwen' },
+    { name: 'Bovenlip wax', price: 5, desc: 'Verwijderen van haartjes boven de bovenlip.', category: 'Gelaatsverzorging' }
 ])
 
 const selectedServices = ref<string[]>([])
 
-const showTimes = ref(false)
+// current in-page window: 'services' | 'times' | 'credentials' | 'confirmation'
+const view = ref<'services' | 'times' | 'credentials' | 'confirmation'>('services')
+
+// category filtering
+const categories = ['Gelaatsverzorging', 'Manicure', 'Voetverzorging', 'Wimpers', 'Wenkbrauwen']
+const selectedCategory = ref<string | null>(null)
+
+function selectCategory(cat: string | null) {
+    if (cat === null) {
+        selectedCategory.value = null
+    } else if (selectedCategory.value === cat) {
+        selectedCategory.value = null
+    } else {
+        selectedCategory.value = cat
+    }
+    // Keep previously selected services when switching categories so the user
+    // doesn't lose their selections (prices and chosen treatments remain).
+    // We still clear the chosen slot when the user actively changes services
+    // via toggleService to force re-selection of an appropriate time.
+    // ensure we show the services window after switching category
+    view.value = 'services'
+}
+
+const filteredServices = computed(() => {
+    if (!selectedCategory.value) return servicesOptions.value
+    return servicesOptions.value.filter(s => s.category === selectedCategory.value)
+})
+
+function goBackToServices() {
+    view.value = 'services'
+}
+
+function goBackToTimes() {
+    view.value = 'times'
+}
+
+function finalizeSelection() {
+    if (!selected.value) return
+    view.value = 'credentials'
+}
+
+function resetToServices() {
+    // clear form and go back to services window for a new booking
+    form.value = { name: '', email: '', phone: '' }
+    selected.value = null
+    selectedServices.value = []
+    message.value = ''
+    view.value = 'services'
+}
+
+
+// service descriptions are always visible now (no expand/collapse)
 
 const total = computed(() => {
     return selectedServices.value.reduce((acc, name) => {
@@ -131,8 +209,8 @@ const total = computed(() => {
 
 function chooseTime() {
     if (selectedServices.value.length === 0) return
-    showTimes.value = true
-    // reload slots for selected date
+    // switch to times window and load slots
+    view.value = 'times'
     loadSlots()
 }
 
@@ -200,7 +278,8 @@ async function submitBooking() {
         form.value = { name: '', email: '', phone: '' }
         selected.value = null
         selectedServices.value = []
-        showTimes.value = false
+        // show confirmation window
+        view.value = 'confirmation'
     } catch (err: any) {
         message.value = 'Fout bij reserveren: ' + (err?.response?.data?.message || err?.message || err)
     } finally {

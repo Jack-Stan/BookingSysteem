@@ -1,10 +1,18 @@
 .booking {
-    max-width: 540px;
+    /* allow the booking card to be wider on desktop so the form doesn't feel cramped */
+    max-width: 720px;
     margin: 0 auto;
     padding: 1.25rem;
     border-radius: 12px;
     background: var(--surface);
     box-shadow: var(--card-shadow);
+}
+
+/* On very wide screens allow an even larger form width */
+@media (min-width: 1200px) {
+    .booking {
+        max-width: 900px;
+    }
 }
 
 /* compact intro block that sits above the first input in the booking panel */
@@ -32,22 +40,28 @@
 .booking .panel-header {
     display: flex;
     align-items: center;
-    justify-content: center;
+    /* left-align title and place pills to the right on wider screens */
+    justify-content: flex-start;
     gap: 1rem;
     padding-bottom: 0.5rem;
 }
 
 .booking .panel-title {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--primary);
     font-size: 1.05rem;
+    margin-right: auto;
+    text-align: left;
 }
 
 .booking .panel-cats {
     display: flex;
     gap: 0.5rem;
     padding: 0.5rem 0;
-    overflow-x: auto;
+    /* allow pills to wrap to multiple lines instead of creating a horizontal scrollbar */
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow-x: visible;
 }
 
 .booking .panel-cats .cat {
@@ -55,15 +69,145 @@
     border-radius: 999px;
     background: #fff;
     box-shadow: 0 6px 18px rgba(36, 27, 24, 0.04);
-    white-space: nowrap;
+    /* allow the pill label to wrap if necessary (prevents layout overflow) */
+    white-space: normal;
     font-weight: 600;
     cursor: pointer;
+}
+
+.booking .panel-cats .cat.active {
+    background: linear-gradient(90deg, var(--primary), var(--primary-600));
+    color: white;
+    box-shadow: 0 10px 30px rgba(212, 75, 138, 0.12);
+}
+
+/* Button polish: make all interactive controls consistent and professional */
+.booking button,
+.booking .panel-cats .cat,
+.booking .service-chip {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+.booking button {
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1;
+    transition: transform .08s ease, box-shadow .12s ease, background .12s ease;
+    /* ensure booking-pane buttons use the readable brand text color by default
+       (overrides global button background/color from site-wide styles) */
+    color: var(--text);
+}
+
+/* Primary CTA */
+.btn-primary {
+    display: inline-block;
+    padding: 0.55rem 1rem;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-600));
+    color: #fff;
+    font-weight: 700;
+    border: none;
+    box-shadow: 0 6px 20px rgba(212, 75, 138, 0.12);
+    cursor: pointer;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(212, 75, 138, 0.16);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* secondary button (used for 'Terug' and 'Nieuwe reservering') */
+.btn-secondary {
+    display: inline-block;
+    padding: 0.45rem 0.8rem;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid rgba(16, 42, 67, 0.06);
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background: rgba(16, 42, 67, 0.02);
+    transform: translateY(-1px);
+}
+
+/* small toggle / icon buttons */
+.desc-toggle,
+.service-toggle {
+    background: transparent;
+    border: none;
+    padding: 0.15rem 0.35rem;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.desc-toggle:hover {
+    background: rgba(16, 42, 67, 0.04);
+}
+
+/* service chips: subtle card feel and gentle hover */
+.service-chip {
+    -webkit-appearance: none;
+    appearance: none;
+    text-align: left;
+    transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease;
+}
+
+.service-chip:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(16, 42, 67, 0.06);
+}
+
+/* category pills: reduce heavy shadow and tighten spacing */
+.booking .panel-cats .cat {
+    box-shadow: 0 6px 14px rgba(36, 27, 24, 0.035);
+}
+
+/* On small screens, stack title and pills vertically and center them */
+@media (max-width: 720px) {
+    .booking .panel-header {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .booking .panel-cats {
+        justify-content: center;
+    }
+}
+
+/* focus styles for keyboard users */
+.booking button:focus-visible,
+.booking .panel-cats .cat:focus-visible {
+    outline: 3px solid rgba(212, 75, 138, 0.18);
+    /* explicitly set pill text color so unselected pills remain readable
+           even if global button rules attempt to change button appearance */
+    color: var(--text);
+    outline-offset: 3px;
 }
 
 /* make service list items show price aligned right like screenshot */
 .service-list {
     list-style: none;
     padding: 0;
+
+    /* Defensive rule: ensure non-active pills always use the readable text color
+       and a light background. This prevents global button rules from producing
+       dark backgrounds with dark text in this component. */
+    .booking .panel-cats .cat:not(.active) {
+        color: var(--text);
+        background: #fff;
+    }
+
     margin: 0
 }
 
@@ -131,6 +275,15 @@ h3 {
     margin: 0.75rem 0
 }
 
+/* Make booking headings more visible */
+.booking h3,
+.booking h2 {
+    color: var(--text);
+    font-weight: 700;
+    font-size: 1rem;
+    margin: 0.6rem 0;
+}
+
 .slots {
     list-style: none;
     padding: 0;
@@ -193,8 +346,22 @@ h3 {
 }
 
 .service-selected {
-    border-color: rgba(212, 75, 138, 0.28);
-    box-shadow: 0 10px 30px rgba(216, 75, 138, 0.06);
+    border-color: rgba(212, 75, 138, 0.36);
+    background: linear-gradient(180deg, rgba(216, 75, 138, 0.08), rgba(255, 255, 255, 0.6));
+    box-shadow: 0 14px 36px rgba(216, 75, 138, 0.10);
+}
+
+.service-selected .service-name {
+    color: var(--primary);
+}
+
+.service-selected .service-price {
+    color: var(--primary-600);
+    font-weight: 800;
+}
+
+.service-selected:active {
+    transform: translateY(0);
 }
 
 .service-price {
@@ -207,6 +374,23 @@ h3 {
     width: 100%;
     justify-content: space-between;
     align-items: center
+}
+
+/* Ensure service name is visible and takes available space */
+.service-toggle {
+    background: transparent;
+    border: none;
+    padding: 0;
+    text-align: left;
+    flex: 1 1 auto;
+    cursor: pointer;
+}
+
+.service-name {
+    font-weight: 700;
+    color: var(--text);
+    font-size: 0.98rem;
+    display: block;
 }
 
 .service-desc {
@@ -258,6 +442,8 @@ h3 {
     margin-top: 0.25rem;
     border-radius: 8px;
     border: 1px solid rgba(16, 42, 67, 0.08);
+    background: #fff; /* ensure inputs are white in credentials view */
+    color: var(--text);
 }
 
 .actions {
@@ -306,9 +492,10 @@ h3 {
         font-size: 0.95rem;
     }
 
-    /* services: hide long descriptions and make chips more compact */
+    /* services: keep descriptions visible on mobile too */
     .service-desc {
-        display: none
+        display: block;
+        font-size: 0.9rem;
     }
 
     .service-chip {

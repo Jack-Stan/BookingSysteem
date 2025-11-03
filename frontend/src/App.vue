@@ -6,9 +6,9 @@ import BookingForm from './components/BookingForm.vue'
   <div>
     <header style="padding:1rem 0">
       <div class="brand">
-        <img src="./assets/359944470_274562251846758_2041380195044041388_n.jpg" alt="Silke Beauty logo" />
+        <img src="./assets/359944470_274562251846758_2041380195044041388_n.jpg" alt="Silke beauty love and care" />
         <div>
-          <h1>Silke Beauty</h1>
+          <h1>Silke beauty love and care</h1>
           <small>Love and Care — Nagels & Beauty</small>
         </div>
       </div>
@@ -17,14 +17,8 @@ import BookingForm from './components/BookingForm.vue'
     <main class="layout">
       <section class="hero">
         <div class="card">
-          <h2>Welkom bij Silke Beauty</h2>
           <p style="color:var(--muted)">Kies een datum en tijdslot aan de rechterkant om een reservering te maken. Je
             ontvangt een bevestiging per e-mail.</p>
-          <ul style="margin-top:1rem;color:var(--muted)">
-            <li>Professionele nagelverzorging</li>
-            <li>Pedicure & Beauty</li>
-            <li>Scherpe prijzen en vriendelijke service</li>
-          </ul>
         </div>
       </section>
 
