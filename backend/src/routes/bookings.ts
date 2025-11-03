@@ -17,11 +17,11 @@ router.post('/', async (req: Request, res: Response) => {
     for (let h = 9; h <= 16; h++) validSlots.push(`${String(h).padStart(2, '0')}:00`)
     if (!validSlots.includes(time)) return res.status(400).json({ message: 'Ongeldige tijd. Kies een beschikbaar uurslot.' })
 
-    const taken = countBookingsForSlot(date, time)
+    const taken = await countBookingsForSlot(date, time)
     if (taken >= SLOT_CAPACITY) return res.status(409).json({ message: 'Slot vol' })
 
     const booking = { id: uuid(), date, time, name, email, phone, services }
-    addBooking(booking)
+    await addBooking(booking)
 
         // send confirmation email and create calendar event (don't block failure)
         ; (async () => {

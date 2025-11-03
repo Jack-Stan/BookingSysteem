@@ -16,15 +16,15 @@ function generateSlots() {
 // capacity per slot (changeable)
 const SLOT_CAPACITY = Number(process.env.SLOT_CAPACITY || '2')
 
-router.get('/', (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
     const date = String(req.query.date || '')
     if (!date) return res.status(400).json({ message: 'date query param required (YYYY-MM-DD)' })
 
-    const slots = generateSlots()
-    const result = slots.map(time => {
-        const taken = countBookingsForSlot(date, time)
+    const slotsArr = generateSlots()
+    const result = await Promise.all(slotsArr.map(async time => {
+        const taken = await countBookingsForSlot(date, time)
         return { time, available: Math.max(0, SLOT_CAPACITY - taken) }
-    })
+    }))
     res.json(result)
 })
 
