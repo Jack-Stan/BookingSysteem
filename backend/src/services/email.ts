@@ -26,10 +26,16 @@ async function sendBookingConfirmation(b: Booking) {
     const subject = `Bevestiging reservering ${b.date} ${b.time}`
     const text = `Beste ${b.name},\n\nJe reservering op ${b.date} om ${b.time} is bevestigd.\n\nGeselecteerde behandelingen: ${prettyServices(b.services)}\n\nGroeten,\nSilke Beauty`
     if (!transporter) {
-        console.log('Email not configured; would send:', { to: b.email, subject, text })
+        console.log('[email] Email not configured; would send:', { to: b.email, subject })
         return
     }
-    await transporter.sendMail({ from: FROM, to: b.email, subject, text })
+    try {
+        const info = await transporter.sendMail({ from: FROM, to: b.email, subject, text })
+        console.log('[email] Booking confirmation sent to', b.email, '(id:', info.messageId, ')')
+    } catch (e) {
+        console.error('[email] Failed to send confirmation:', (e as any)?.message || e)
+        // Don't re-throw — booking is already saved, just log the email error
+    }
 }
 
 export default { sendBookingConfirmation }
