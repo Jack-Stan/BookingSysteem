@@ -32,29 +32,29 @@ router.get('/', async (req: Request, res: Response) => {
             console.warn('[slots] Calendar fetch failed; ignoring calendar for availability calculation', (e as any)?.message)
             // Fall back to empty calendar events — DB bookings alone will determine availability
         }
-        
+
         // Separate availability events (for filtering what's bookable) from booking events (for reducing capacity)
         // Availability events typically have "work" or "beschikbaar" in title/description, or are all-day events, or marked with a specific keyword
         const availabilityEvents = calendarEvents.filter(ev => {
             const title = (ev.summary || '').toLowerCase()
             const desc = (ev.description || '').toLowerCase()
             // Look for keywords indicating this is an availability/working hours event
-            return title.includes('work') || title.includes('beschikbaar') || 
-                   desc.includes('work') || desc.includes('beschikbaar') ||
-                   title.includes('available') || desc.includes('available')
+            return title.includes('work') || title.includes('beschikbaar') ||
+                desc.includes('work') || desc.includes('beschikbaar') ||
+                title.includes('available') || desc.includes('available')
         })
-        
+
         // Booking/blocking events are those that are NOT availability events
         const bookingEvents = calendarEvents.filter(ev => !availabilityEvents.includes(ev))
-        
+
         const result = await Promise.all(slotsArr.map(async time => {
             const takenFromDb = await countBookingsForSlot(date, time)
-            
+
             // Calculate slot time (90-minute slot)
             const [hh, mm] = time.split(':').map(Number)
             const slotStart = new Date(`${date}T${time}:00`)
             const slotEnd = new Date(slotStart.getTime() + 90 * 60 * 1000) // 90 minutes
-            
+
             // Check if this slot falls within any availability window
             let isAvailable = availabilityEvents.length === 0 // If no availability events, assume always available
             if (availabilityEvents.length > 0) {
@@ -68,7 +68,7 @@ router.get('/', async (req: Request, res: Response) => {
                     return slotStart >= s && slotStart < e
                 })
             }
-            
+
             // Count booking events that overlap this slot (reduces available capacity)
             const takenFromCalendar = bookingEvents.filter(ev => {
                 const sStr = ev.start?.dateTime ?? ev.start?.date ?? null
@@ -78,11 +78,11 @@ router.get('/', async (req: Request, res: Response) => {
                 const e = new Date(eStr)
                 return s < slotEnd && e > slotStart
             }).length
-            
+
             const available = isAvailable ? Math.max(0, SLOT_CAPACITY - (takenFromDb + takenFromCalendar)) : 0
             return { time, available }
         }))
-        
+
         res.json(result)
     } catch (e) {
         console.error('[slots] Unexpected error:', (e as any)?.message || e)

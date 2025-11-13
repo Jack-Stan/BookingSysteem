@@ -72,7 +72,7 @@
 
             <div>
                 <h3>Geselecteerd: {{ selected }} <small
-                        style="font-weight:400; font-size:0.9rem; color:var(--muted);">(1 uur)</small></h3>
+                        style="font-weight:400; font-size:0.9rem; color:var(--muted);">(1,5 uur)</small></h3>
                 <form class="form" @submit.prevent="submitBooking">
                     <label>
                         Naam

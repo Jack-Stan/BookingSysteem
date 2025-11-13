@@ -66,19 +66,19 @@ async function createEvent(b: Booking) {
         // Parse the date and time
         const [yyyy, mm, dd] = b.date.split('-').map(Number)
         const [hh, min] = b.time.split(':').map(Number)
-        
+
         // Create start time in local timezone (Brussels/Europe)
         const startDate = new Date(yyyy, mm - 1, dd, hh, min, 0)
         const endDate = new Date(startDate.getTime() + 90 * 60 * 1000) // +90 minutes (1.5 hours)
-        
+
         const event = {
             summary: `Reservering - ${b.name}`,
             description: `Naam: ${b.name}\nTel: ${b.phone || '-'}\nE-mail: ${b.email}\nBehandelingen: ${b.services && b.services.length ? b.services.join(', ') : '-'}`,
-            start: { 
+            start: {
                 dateTime: startDate.toISOString(),
                 timeZone: 'Europe/Brussels'
             },
-            end: { 
+            end: {
                 dateTime: endDate.toISOString(),
                 timeZone: 'Europe/Brussels'
             }
