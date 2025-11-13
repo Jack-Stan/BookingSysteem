@@ -45,8 +45,7 @@
 
             <ul class="slots">
                 <li v-for="s in slots.filter(x => x.available > 0)" :key="s.time">
-                    <button :class="['slot-btn', { 'slot-selected': selected === s.time }]"
-                        @click="selectSlot(s.time)">
+                    <button :class="['slot-btn', { 'slot-selected': selected === s.time }]" @click="selectSlot(s.time)">
                         <span>{{ s.time }}</span>
                         <span class="slot-badge">{{ s.available }} vrij</span>
                     </button>

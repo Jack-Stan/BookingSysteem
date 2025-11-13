@@ -21,12 +21,17 @@ router.post('/', async (req: Request, res: Response) => {
     const booking = { id: uuid(), date, time, name, email, phone, services }
     await addBooking(booking)
 
-        // send confirmation email and create calendar event (don't block failure)
+        // send confirmation email to customer and notification to Silke (don't block failure)
         ; (async () => {
             try {
                 await emailService.sendBookingConfirmation(booking)
             } catch (e) {
-                console.error('Email error', e)
+                console.error('Email error (customer)', e)
+            }
+            try {
+                await emailService.sendBookingNotificationToSilke(booking)
+            } catch (e) {
+                console.error('Email error (Silke)', e)
             }
             try {
                 await calendarService.createEvent(booking)
