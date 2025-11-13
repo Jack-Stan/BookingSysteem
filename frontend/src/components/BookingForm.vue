@@ -1,12 +1,13 @@
 <template>
     <div class="booking">
-        <div class="date-row" style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem">
-            <button type="button" class="btn-secondary" @click="prevDay">←</button>
-            <div style="flex:1; display:flex; gap:0.5rem; align-items:center;">
-                <div style="font-weight:700">{{ formatDate(date) }}</div>
-                <input type="date" v-model="date" @change="loadSlots" :min="minDate" style="margin-left:auto" />
+        <!-- Date selector: only visible when choosing times -->
+        <div v-if="view === 'times'" class="date-selector">
+            <button type="button" class="date-nav-btn" @click="prevDay" title="Vorige dag">←</button>
+            <div class="date-display">
+                <div class="date-formatted">{{ formatDate(date) }}</div>
+                <input type="date" v-model="date" @change="loadSlots" :min="minDate" class="date-input" />
             </div>
-            <button type="button" class="btn-secondary" @click="nextDay">→</button>
+            <button type="button" class="date-nav-btn" @click="nextDay" title="Volgende dag">→</button>
         </div>
         <div v-if="view === 'services'" class="panel-header">
             <div class="panel-title">Kies diensten</div>
@@ -36,11 +37,10 @@
         </div>
 
         <div v-if="view === 'times'">
-            <div
-                style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:0.5rem">
+            <div class="section-header">
                 <button type="button" class="btn-secondary" @click="goBackToServices">← Terug</button>
-                <div style="font-weight:700">Beschikbare tijden voor {{ date }}</div>
-                <div style="width:56px"></div>
+                <div class="section-title">Beschikbare tijden voor {{ date }}</div>
+                <div class="spacer"></div>
             </div>
 
             <ul class="slots">
@@ -62,34 +62,54 @@
         </div>
 
         <div v-if="view === 'credentials'">
-            <div
-                style="display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:0.5rem">
+            <div class="section-header">
                 <button type="button" class="btn-secondary" @click="goBackToTimes">← Terug</button>
-                <div style="font-weight:700">Vul je gegevens in</div>
-                <div style="width:56px"></div>
+                <div class="section-title">Vul je gegevens in</div>
+                <div class="spacer"></div>
             </div>
 
-            <div>
-                <h3>Geselecteerd: {{ selected }} <small
-                        style="font-weight:400; font-size:0.9rem; color:var(--muted);">(1,5 uur)</small></h3>
-                <form class="form" @submit.prevent="submitBooking">
-                    <label>
-                        Naam
-                        <input v-model="form.name" required type="text" />
-                    </label>
-                    <label>
-                        E-mail
-                        <input v-model="form.email" type="email" required />
-                    </label>
-                    <label>
-                        Telefoon (optioneel)
-                        <input v-model="form.phone" type="tel" />
-                    </label>
-                    <div class="actions">
-                        <button class="btn-primary" type="submit" :disabled="submitting">Finish &amp; Bevestig</button>
+            <!-- Booking Summary Card -->
+            <div class="booking-summary">
+                <div class="summary-header">📅 Je Boeking</div>
+                <div class="summary-row">
+                    <span class="summary-label">Datum:</span>
+                    <span class="summary-value">{{ formatDate(date) }}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Tijd:</span>
+                    <span class="summary-value">{{ selected }} <small>(1,5 uur)</small></span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Behandelingen:</span>
+                    <div class="summary-services">
+                        <span v-for="s in selectedServices" :key="s" class="service-tag">{{ s }}</span>
                     </div>
-                </form>
+                </div>
+                <div class="summary-row summary-total">
+                    <span class="summary-label">Totaal:</span>
+                    <span class="summary-value">€ {{ total }}</span>
+                </div>
             </div>
+
+            <!-- Customer Info Form -->
+            <form class="form" @submit.prevent="submitBooking">
+                <h3>Je Gegevens</h3>
+                <label>
+                    Naam
+                    <input v-model="form.name" required type="text" />
+                </label>
+                <label>
+                    E-mail
+                    <input v-model="form.email" type="email" required />
+                </label>
+                <label>
+                    Telefoon (optioneel)
+                    <input v-model="form.phone" type="tel" />
+                </label>
+                <div class="actions">
+                    <button class="btn-primary" type="submit" :disabled="submitting">Finish &amp; Bevestig</button>
+                </div>
+            </form>
         </div>
 
         <p v-if="selectedServices.length === 0" class="muted">Kies ten minste één behandeling.</p>
