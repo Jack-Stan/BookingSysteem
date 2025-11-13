@@ -1,13 +1,44 @@
 <template>
     <div class="booking">
-        <!-- Date selector: only visible when choosing times -->
-        <div v-if="view === 'times'" class="date-selector">
-            <button type="button" class="date-nav-btn" @click="prevDay" title="Vorige dag">←</button>
-            <div class="date-display">
-                <div class="date-formatted">{{ formatDate(date) }}</div>
-                <input type="date" v-model="date" @change="loadSlots" :min="minDate" class="date-input" />
+        <!-- Calendar picker: only visible when choosing times -->
+        <div v-if="view === 'times'" class="calendar-picker">
+            <div class="calendar-header">
+                <button type="button" class="calendar-nav-btn" @click="prevMonth" title="Vorige maand">←</button>
+                <div class="calendar-title">{{ calendarMonthYear }}</div>
+                <button type="button" class="calendar-nav-btn" @click="nextMonth" title="Volgende maand">→</button>
             </div>
-            <button type="button" class="date-nav-btn" @click="nextDay" title="Volgende dag">→</button>
+            
+            <div class="calendar-weekdays">
+                <div class="weekday">Ma</div>
+                <div class="weekday">Di</div>
+                <div class="weekday">Wo</div>
+                <div class="weekday">Do</div>
+                <div class="weekday">Vr</div>
+                <div class="weekday">Za</div>
+                <div class="weekday">Zo</div>
+            </div>
+            
+            <div class="calendar-grid">
+                <button v-for="day in calendarDays" :key="`${day.year}-${day.month}-${day.date}`" 
+                    type="button"
+                    :class="['calendar-day', { 
+                        'other-month': !day.isCurrentMonth,
+                        'today': day.isToday,
+                        'selected': day.date === dateObj.getDate() && day.month === dateObj.getMonth() && day.year === dateObj.getFullYear(),
+                        'disabled': day.isPast
+                    }]"
+                    @click="selectDate(day.date, day.month, day.year)"
+                    :disabled="day.isPast"
+                    :title="day.isPast ? 'Datum in het verleden' : ''">
+                    {{ day.date }}
+                </button>
+            </div>
+            
+            <div class="calendar-footer">
+                <div class="selected-date">
+                    <strong>Geselecteerd:</strong> {{ formatDate(date) }}
+                </div>
+            </div>
         </div>
         <div v-if="view === 'services'" class="panel-header">
             <div class="panel-title">Kies diensten</div>
@@ -142,6 +173,8 @@ import { ref, computed } from 'vue'
 import axios from 'axios'
 
 const date = ref(new Date().toISOString().substring(0, 10))
+const calendarMonth = ref(new Date())
+
 function formatDate(d: string) {
     try {
         const dt = new Date(d)
@@ -151,23 +184,88 @@ function formatDate(d: string) {
     }
 }
 
-function addDays(d: string, delta: number) {
-    const dt = new Date(d)
-    dt.setDate(dt.getDate() + delta)
-    return dt.toISOString().substring(0, 10)
+// Calendar properties
+const dateObj = computed(() => new Date(date.value))
+
+const calendarMonthYear = computed(() => {
+    return calendarMonth.value.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+})
+
+const calendarDays = computed(() => {
+    const year = calendarMonth.value.getFullYear()
+    const month = calendarMonth.value.getMonth()
+    
+    // Get first day of month and number of days
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const daysInMonth = lastDay.getDate()
+    const startingDayOfWeek = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1 // Monday = 0
+    
+    // Get previous month days to fill the grid
+    const prevMonthLastDay = new Date(year, month, 0).getDate()
+    const days: any[] = []
+    
+    // Previous month days
+    for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+        days.push({
+            date: prevMonthLastDay - i,
+            month: month - 1,
+            year: month === 0 ? year - 1 : year,
+            isCurrentMonth: false,
+            isPast: true,
+            isToday: false
+        })
+    }
+    
+    // Current month days
+    const today = new Date()
+    const todayStr = today.toISOString().substring(0, 10)
+    
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dayDate = new Date(year, month, i)
+        const dayStr = dayDate.toISOString().substring(0, 10)
+        const isPast = dayStr < todayStr
+        const isToday = dayStr === todayStr
+        
+        days.push({
+            date: i,
+            month,
+            year,
+            isCurrentMonth: true,
+            isPast,
+            isToday
+        })
+    }
+    
+    // Next month days to fill grid
+    const remainingDays = 42 - days.length // 6 weeks * 7 days
+    for (let i = 1; i <= remainingDays; i++) {
+        days.push({
+            date: i,
+            month: month + 1,
+            year: month === 11 ? year + 1 : year,
+            isCurrentMonth: false,
+            isPast: true,
+            isToday: false
+        })
+    }
+    
+    return days
+})
+
+function prevMonth() {
+    calendarMonth.value = new Date(calendarMonth.value.getFullYear(), calendarMonth.value.getMonth() - 1, 1)
 }
 
-function prevDay() {
-    date.value = addDays(date.value, -1)
+function nextMonth() {
+    calendarMonth.value = new Date(calendarMonth.value.getFullYear(), calendarMonth.value.getMonth() + 1, 1)
+}
+
+function selectDate(dayDate: number, dayMonth: number, dayYear: number) {
+    const dt = new Date(dayYear, dayMonth, dayDate)
+    date.value = dt.toISOString().substring(0, 10)
     loadSlots()
 }
-
-function nextDay() {
-    date.value = addDays(date.value, 1)
-    loadSlots()
-}
-
-const minDate = new Date().toISOString().substring(0, 10)
 const slots = ref<Array<{ time: string, available: number }>>([])
 const loading = ref(false)
 const selected = ref<string | null>(null)
