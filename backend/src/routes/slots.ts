@@ -39,15 +39,20 @@ router.get('/', async (req: Request, res: Response) => {
             const title = (ev.summary || '').toLowerCase()
             const desc = (ev.description || '').toLowerCase()
             // Look for keywords indicating this is an availability/working hours event
-            return title.includes('work') || title.includes('beschikbaar') ||
-                desc.includes('work') || desc.includes('beschikbaar') ||
-                title.includes('available') || desc.includes('available')
+            return title.includes('work') || title.includes('beschikbaar') || 
+                   desc.includes('work') || desc.includes('beschikbaar') ||
+                   title.includes('available') || desc.includes('available')
         })
 
         // Booking/blocking events are those that are NOT availability events
         const bookingEvents = calendarEvents.filter(ev => !availabilityEvents.includes(ev))
-
-        const result = await Promise.all(slotsArr.map(async time => {
+        
+        console.log(`[slots] Date ${date}: ${calendarEvents.length} total events, ${availabilityEvents.length} availability, ${bookingEvents.length} bookings`)
+        if (availabilityEvents.length > 0) {
+            availabilityEvents.forEach(av => {
+                console.log(`[slots]   - Availability: ${av.summary} (${av.start?.dateTime || av.start?.date} to ${av.end?.dateTime || av.end?.date})`)
+            })
+        }        const result = await Promise.all(slotsArr.map(async time => {
             const takenFromDb = await countBookingsForSlot(date, time)
 
             // Calculate slot time (90-minute slot)
