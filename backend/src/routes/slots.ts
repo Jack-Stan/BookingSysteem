@@ -12,9 +12,9 @@ function generateSlotsInWindow(startHour: number, startMin: number, endHour: num
     const slots: string[] = []
     let currentMin = startMin
     let currentHour = startHour
-    
+
     const endTotalMin = endHour * 60 + endMin
-    
+
     while (currentHour * 60 + currentMin + 90 <= endTotalMin) {
         slots.push(`${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`)
         currentMin += 30
@@ -23,7 +23,7 @@ function generateSlotsInWindow(startHour: number, startMin: number, endHour: num
             currentHour += 1
         }
     }
-    
+
     return slots
 }
 
@@ -47,44 +47,44 @@ router.get('/', async (req: Request, res: Response) => {
         const availabilityEvents = calendarEvents.filter(ev => {
             const title = (ev.summary || '').toLowerCase()
             const desc = (ev.description || '').toLowerCase()
-            return title.includes('work') || title.includes('beschikbaar') || 
-                   desc.includes('work') || desc.includes('beschikbaar') ||
-                   title.includes('available') || desc.includes('available')
+            return title.includes('work') || title.includes('beschikbaar') ||
+                desc.includes('work') || desc.includes('beschikbaar') ||
+                title.includes('available') || desc.includes('available')
         })
 
         // Booking/blocking events are those that are NOT availability events
         const bookingEvents = calendarEvents.filter(ev => !availabilityEvents.includes(ev))
-        
+
         console.log(`[slots] Date ${date}: ${calendarEvents.length} total events, ${availabilityEvents.length} availability, ${bookingEvents.length} bookings`)
-        
+
         // Generate slots based on availability events
         let slotsArr: string[] = []
-        
+
         if (availabilityEvents.length > 0) {
             // Use first availability event to determine working hours
             const firstAvailability = availabilityEvents[0]
             const sStr = firstAvailability.start?.dateTime ?? firstAvailability.start?.date
             const eStr = firstAvailability.end?.dateTime ?? firstAvailability.end?.date
-            
+
             if (sStr && eStr) {
                 const startDt = new Date(sStr)
                 const endDt = new Date(eStr)
-                
+
                 console.log(`[slots]   - Using availability: ${firstAvailability.summary} (${startDt.toISOString()} to ${endDt.toISOString()})`)
-                
+
                 slotsArr = generateSlotsInWindow(
                     startDt.getHours(),
                     startDt.getMinutes(),
                     endDt.getHours(),
                     endDt.getMinutes()
                 )
-                
+
                 console.log(`[slots]   - Generated ${slotsArr.length} slots: ${slotsArr.join(', ')}`)
             }
         } else {
             console.log(`[slots]   - No availability event found; returning empty slots`)
         }
-        
+
         const result = await Promise.all(slotsArr.map(async time => {
             const takenFromDb = await countBookingsForSlot(date, time)
 
@@ -106,7 +106,7 @@ router.get('/', async (req: Request, res: Response) => {
             const available = Math.max(0, SLOT_CAPACITY - (takenFromDb + takenFromCalendar))
             return { time, available }
         }))
-        
+
         res.json(result)
     } catch (e) {
         console.error('[slots] Unexpected error:', (e as any)?.message || e)

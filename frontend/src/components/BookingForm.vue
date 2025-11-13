@@ -220,7 +220,8 @@ async function loadSlots() {
     selected.value = null
     message.value = ''
     try {
-        const res = await axios.get(`/api/slots?date=${date.value}`)
+        const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+        const res = await axios.get(`${apiBase}/api/slots?date=${date.value}`)
         slots.value = res.data
     } catch (err: any) {
         message.value = 'Kan slots niet laden van server; gebruik lokale voorbeelden.'
@@ -258,6 +259,7 @@ async function submitBooking() {
     submitting.value = true
     message.value = ''
     try {
+        const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:4000'
         const payload = {
             date: date.value,
             time: selected.value,
@@ -266,7 +268,7 @@ async function submitBooking() {
             phone: form.value.phone,
             services: selectedServices.value
         }
-        await axios.post('/api/bookings', payload)
+        await axios.post(`${apiBase}/api/bookings`, payload)
         message.value = 'Reservering geplaatst! Controleer je e-mail voor bevestiging.'
         form.value = { name: '', email: '', phone: '' }
         selected.value = null
