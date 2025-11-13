@@ -4,14 +4,26 @@ import calendarService from '../services/calendar'
 
 const router = Router()
 
-// generate slots for a date (90-minute appointments; last start time allows 90 min before end-of-day)
-function generateSlots() {
+/**
+ * Generate 90-minute slots within a given time window.
+ * Slots start every 30 minutes but are 90 minutes long.
+ */
+function generateSlotsInWindow(startHour: number, startMin: number, endHour: number, endMin: number): string[] {
     const slots: string[] = []
-    // appointments are 90 minutes (1.5 hours); last start is 14:30 for a 16:00 end
-    for (let h = 9; h <= 14; h++) {
-        slots.push(`${String(h).padStart(2, '0')}:00`)
-        if (h < 14) slots.push(`${String(h).padStart(2, '0')}:30`)
+    let currentMin = startMin
+    let currentHour = startHour
+    
+    const endTotalMin = endHour * 60 + endMin
+    
+    while (currentHour * 60 + currentMin + 90 <= endTotalMin) {
+        slots.push(`${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`)
+        currentMin += 30
+        if (currentMin >= 60) {
+            currentMin -= 60
+            currentHour += 1
+        }
     }
+    
     return slots
 }
 
@@ -23,22 +35,18 @@ router.get('/', async (req: Request, res: Response) => {
         const date = String(req.query.date || '')
         if (!date) return res.status(400).json({ message: 'date query param required (YYYY-MM-DD)' })
 
-        const slotsArr = generateSlots()
         // fetch calendar events for the date (if configured)
         let calendarEvents: any[] = []
         try {
             calendarEvents = await calendarService.listEventsForDate(date)
         } catch (e) {
             console.warn('[slots] Calendar fetch failed; ignoring calendar for availability calculation', (e as any)?.message)
-            // Fall back to empty calendar events — DB bookings alone will determine availability
         }
 
-        // Separate availability events (for filtering what's bookable) from booking events (for reducing capacity)
-        // Availability events typically have "work" or "beschikbaar" in title/description, or are all-day events, or marked with a specific keyword
+        // Separate availability events from booking events
         const availabilityEvents = calendarEvents.filter(ev => {
             const title = (ev.summary || '').toLowerCase()
             const desc = (ev.description || '').toLowerCase()
-            // Look for keywords indicating this is an availability/working hours event
             return title.includes('work') || title.includes('beschikbaar') || 
                    desc.includes('work') || desc.includes('beschikbaar') ||
                    title.includes('available') || desc.includes('available')
@@ -48,33 +56,44 @@ router.get('/', async (req: Request, res: Response) => {
         const bookingEvents = calendarEvents.filter(ev => !availabilityEvents.includes(ev))
         
         console.log(`[slots] Date ${date}: ${calendarEvents.length} total events, ${availabilityEvents.length} availability, ${bookingEvents.length} bookings`)
+        
+        // Generate slots based on availability events
+        let slotsArr: string[] = []
+        
         if (availabilityEvents.length > 0) {
-            availabilityEvents.forEach(av => {
-                console.log(`[slots]   - Availability: ${av.summary} (${av.start?.dateTime || av.start?.date} to ${av.end?.dateTime || av.end?.date})`)
-            })
-        }        const result = await Promise.all(slotsArr.map(async time => {
+            // Use first availability event to determine working hours
+            const firstAvailability = availabilityEvents[0]
+            const sStr = firstAvailability.start?.dateTime ?? firstAvailability.start?.date
+            const eStr = firstAvailability.end?.dateTime ?? firstAvailability.end?.date
+            
+            if (sStr && eStr) {
+                const startDt = new Date(sStr)
+                const endDt = new Date(eStr)
+                
+                console.log(`[slots]   - Using availability: ${firstAvailability.summary} (${startDt.toISOString()} to ${endDt.toISOString()})`)
+                
+                slotsArr = generateSlotsInWindow(
+                    startDt.getHours(),
+                    startDt.getMinutes(),
+                    endDt.getHours(),
+                    endDt.getMinutes()
+                )
+                
+                console.log(`[slots]   - Generated ${slotsArr.length} slots: ${slotsArr.join(', ')}`)
+            }
+        } else {
+            console.log(`[slots]   - No availability event found; returning empty slots`)
+        }
+        
+        const result = await Promise.all(slotsArr.map(async time => {
             const takenFromDb = await countBookingsForSlot(date, time)
 
             // Calculate slot time (90-minute slot)
             const [hh, mm] = time.split(':').map(Number)
             const slotStart = new Date(`${date}T${time}:00`)
-            const slotEnd = new Date(slotStart.getTime() + 90 * 60 * 1000) // 90 minutes
+            const slotEnd = new Date(slotStart.getTime() + 90 * 60 * 1000)
 
-            // Check if this slot falls within any availability window
-            let isAvailable = availabilityEvents.length === 0 // If no availability events, assume always available
-            if (availabilityEvents.length > 0) {
-                isAvailable = availabilityEvents.some(av => {
-                    const sStr = av.start?.dateTime ?? av.start?.date ?? null
-                    const eStr = av.end?.dateTime ?? av.end?.date ?? null
-                    if (!sStr || !eStr) return false
-                    const s = new Date(sStr)
-                    const e = new Date(eStr)
-                    // Slot must START within availability window (i.e., start >= availability start AND start < availability end)
-                    return slotStart >= s && slotStart < e
-                })
-            }
-
-            // Count booking events that overlap this slot (reduces available capacity)
+            // Count booking events that overlap this slot
             const takenFromCalendar = bookingEvents.filter(ev => {
                 const sStr = ev.start?.dateTime ?? ev.start?.date ?? null
                 const eStr = ev.end?.dateTime ?? ev.end?.date ?? null
@@ -84,10 +103,10 @@ router.get('/', async (req: Request, res: Response) => {
                 return s < slotEnd && e > slotStart
             }).length
 
-            const available = isAvailable ? Math.max(0, SLOT_CAPACITY - (takenFromDb + takenFromCalendar)) : 0
+            const available = Math.max(0, SLOT_CAPACITY - (takenFromDb + takenFromCalendar))
             return { time, available }
         }))
-
+        
         res.json(result)
     } catch (e) {
         console.error('[slots] Unexpected error:', (e as any)?.message || e)
