@@ -7,6 +7,7 @@ const router = Router()
 /**
  * Generate 90-minute slots within a given time window.
  * Slots start every 60 minutes (not overlapping, since each booking is 90 minutes).
+ * The last slot is included as long as it starts before the end time.
  */
 function generateSlotsInWindow(startHour: number, startMin: number, endHour: number, endMin: number): string[] {
     const slots: string[] = []
@@ -15,7 +16,9 @@ function generateSlotsInWindow(startHour: number, startMin: number, endHour: num
 
     const endTotalMin = endHour * 60 + endMin
 
-    while (currentHour * 60 + currentMin + 90 <= endTotalMin) {
+    // Generate slots as long as they START before the end time
+    // (They can extend past the end time, which is fine for Silke's schedule)
+    while (currentHour * 60 + currentMin < endTotalMin) {
         slots.push(`${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`)
         currentMin += 60  // Increment by 60 minutes to avoid overlaps (each booking is 90 min)
         if (currentMin >= 60) {
