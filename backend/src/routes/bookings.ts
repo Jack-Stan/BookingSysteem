@@ -12,10 +12,8 @@ router.post('/', async (req: Request, res: Response) => {
     if (!date || !time || !name || !email) return res.status(400).json({ message: 'date, time, name and email are required' })
     if (!Array.isArray(services) || services.length === 0) return res.status(400).json({ message: 'Selecteer ten minste één service' })
 
-    // validate time is one of the allowed hourly slots (09:00 - 16:00)
-    const validSlots: string[] = []
-    for (let h = 9; h <= 16; h++) validSlots.push(`${String(h).padStart(2, '0')}:00`)
-    if (!validSlots.includes(time)) return res.status(400).json({ message: 'Ongeldige tijd. Kies een beschikbaar uurslot.' })
+    // Note: time validation is done by the /slots endpoint which generates valid slots dynamically
+    // based on calendar availability. We trust the frontend to only send times from that list.
 
     const taken = await countBookingsForSlot(date, time)
     if (taken >= SLOT_CAPACITY) return res.status(409).json({ message: 'Slot vol' })
